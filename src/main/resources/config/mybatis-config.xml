@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration 
+	PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+	<settings>
+		<!--  
+		<setting name="logImpl" value="LOG4J" />
+		-->
+		<!-- 配合延迟加载使用 -->
+		<setting name="aggressiveLazyLoading" value="false" />
+		
+		<!-- 开启二级缓存,默认开启 -->
+		<setting name="cacheEnabled" value="true"/>
+	</settings>
+	
+	<!-- 根据不同驱动调用getDatabaseProductName();返回了不同的名称,来确定使用的数据库 -->
+	<databaseIdProvider type="DB_VENDOR">
+		<property name="SQL Server" value="sqlserver"/>
+		<property name="DB2" value="sqlserver"/>
+		<property name="SQL Server" value="db2"/>
+		<property name="Oracle" value="oracle"/>
+		<property name="MySQL" value="mysql"/>
+		<property name="PostgreSQL" value="postgresql"/>
+		<property name="Derby" value="derby"/>
+		<property name="HSQL" value="hsqldb"/>
+		<property name="H2" value="h2"/>
+	</databaseIdProvider>
+	
+</configuration>

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.yd.springdemo.dao.SysUserMapper">
+	<resultMap type="SysUser" id="BaseMap">
+		<id column="id" property="id" />
+		<result column="user_name" property="userName" jdbcType="VARCHAR" />
+		<result column="user_password" property="userPassword" />
+		<result column="user_email" property="userEmail" />
+		<result column="user_info" property="userInfo" />
+		<result column="head_img" property="headImg" />
+		<result column="create_time" property="createTime" />
+		
+	</resultMap>
+	<select id="selectById" resultMap="BaseMap">
+		select * from
+		sys_user where id = #{id}
+	</select>
+
+	<select id="selectAll" resultMap="BaseMap">
+		select * from sys_user
+	</select>
+
+	<select id="selectRoleById" parameterType="java.lang.Long"
+		resultType="SysRole">
+		select
+		r.id,
+		r.role_name roleName,
+		r.enabled,
+		r.create_by createby,
+		r.create_time createTime,
+		u.user_name "sysuser.userName",
+		u.user_password as "user.userPassword"
+		from sys_user u
+		join sys_user_role sur on u.id = sur.user_id
+		join sys_role r on r.id = sur.role_id
+		where u.id = #{id}
+	</select>
+
+	<insert id="insert">
+		insert into sys_user
+		(id,user_name,user_password,user_email,user_info,head_img,create_time)
+		values(#{id},#{userName},#{userPassword},#{userEmail},
+		#{userInfo},#{headImg,jdbcType=BLOB},#{createTime,jdbcType=TIMESTAMP})
+	</insert>
+
+	<insert id="insert2" useGeneratedKeys="true" keyProperty="id">
+		insert
+		into sys_user
+		(user_name,user_password,user_email,user_info,head_img,create_time)
+		values(#{userName},#{userPassword},#{userEmail},
+		#{userInfo},#{headImg,jdbcType=BLOB},#{createTime,jdbcType=TIMESTAMP})
+	</insert>
+
+	<insert id="insert3">
+		<!-- 主要是为了给id设置值返回,如果是db2,oracle等则需要先获取序列值进行插入 -->
+		<selectKey keyColumn="id" keyProperty="id" order="AFTER"
+			resultType="long">
+			select last_insert_id()
+		</selectKey>
+		insert into sys_user
+		(user_name,user_password,user_email,user_info,head_img,create_time)
+		values(#{userName},#{userPassword},#{userEmail},
+		#{userInfo},#{headImg,jdbcType=BLOB},#{createTime,jdbcType=TIMESTAMP})
+	</insert>
+
+	<select id="selectRoleByUserIdAndRoleState" resultType="SysRole">
+		select
+		r.id,
+		r.role_name roleName,
+		r.enabled,
+		r.create_by createby,
+		r.create_time createTime,
+		u.user_name "sysuser.userName",
+		u.user_password as "user.userPassword"
+		from sys_user u
+		join sys_user_role sur on u.id = sur.user_id
+		join sys_role r on r.id = sur.role_id
+		where u.id = #{id} and
+		r.enabled=#{enabled}
+	</select>
+
+	<select id="selectLikeUserName" resultMap="BaseMap">
+		<bind name="userName" value="'%'+name+'%'" />
+		select * from sys_user where user_name like #{userName}
+	</select>
+
+	<select id="selectByCondition" resultMap="BaseMap">
+		select * from sys_user
+		<where>
+			<if test="1 lt 2">
+				and 1 = 1
+			</if>
+			<if test="1 lte 1">
+				and 2 = 2
+			</if>
+			<!-- 调用对象方法 -->
+			<if test="sysRole.getId() != null">
+				and 3 = 3
+			</if>
+			<if test="sysRole.id != null">
+				and 4 = 4
+			</if>
+			<!-- 调用静态方法 -->
+			<if test="not @org.yd.maven_sample.dao.util.CommonUtil@isEmpty(userName)">
+				and 5 = 5
+			</if>
+		</where>
+	</select>
+	
+	<resultMap type="org.yd.springdemo.model.SysRole" id="UserVo" >
+		<result column="role_name" property="roleName"/>
+		<result column="enabled" property="enabled"/>
+		<result column="create_by" property="createBy"/>
+		<result column="create_time" property="createTime"/>
+	</resultMap>
+	<resultMap type="SysUser" id="userMap" extends="BaseMap">
+		<association property="sysRole" resultMap="UserVo" columnPrefix="role_">
+		</association>
+	</resultMap>
+	
+	<resultMap type="SysUser" id="userMap2" extends="BaseMap">
+		<association property="sysRole" columnPrefix="role_" resultMap="org.yd.maven_sample.dao.SysRoleMapper.BaseMap"></association>
+	</resultMap>
+	<select id="selectByAsso" resultMap="userMap2">
+		select
+		r.id role_id,
+		r.role_name role_role_name,
+		r.enabled role_enabled,
+		r.create_by role_create_by,
+		r.create_time role_create_time,
+		u.user_name "sysuser.userName",
+		u.user_password as "user.userPassword"
+		from sys_user u
+		join sys_user_role sur on u.id = sur.user_id
+		join sys_role r on r.id = sur.role_id
+		where u.id = #{id} and
+		r.enabled=#{enabled}
+	</select>
+	
+	
+	<resultMap type="SysUser" id="assoBySelect" extends="BaseMap" >
+		<association property="sysRole" fetchType="lazy" column="{id=role_id}" select="org.yd.maven_sample.dao.SysRoleMapper.selectRoleAsso"></association>
+	</resultMap>
+	
+	<select id="selectRoleAssoForSelect" resultMap="assoBySelect">
+		select 
+			u.id,
+			u.user_name,
+			u.user_password,
+			u.user_email,
+			u.user_info,
+			u.head_img,
+			u.create_time,
+			ur.role_id
+		from sys_user u join sys_user_role ur on u.id = ur.user_id
+	</select>
+	
+	
+	<select id="selectByOneToMany" resultMap="oneToManyMap">
+		select
+		r.id role_id,
+		r.role_name role_role_name,
+		r.enabled role_enabled,
+		r.create_by role_create_by,
+		r.create_time role_create_time,
+		u.user_name user_Name,
+		u.user_password as user_Password
+		from sys_user u
+		join sys_user_role sur on u.id = sur.user_id
+		join sys_role r on r.id = sur.role_id
+	</select>
+	
+	<resultMap type="SysUser" id="oneToManyMap" extends="BaseMap">
+		<collection property="roles" columnPrefix="role_" ofType="org.yd.springdemo.model.SysRole">
+			<id column="id" property="id"/>
+			<id column="role_name" property="roleName"/>
+			<id column="enabled" property="enabled"/>
+			<id column="create_by" property="createBy"/>
+			<id column="create_time" property="createTime"/>
+		</collection>
+	</resultMap>
+	<select id="selectAllPrivilge" resultMap="selectAllPrivilegeMap">
+		select 
+			su.id,
+			su.user_name,
+			su.user_password,
+			sr.id role_id,
+			sr.role_name role_role_name,
+			sp.id role_pri_id,
+			sp.privilege_name role_pri_privilege_name,
+			sp.privilege_url role_pri_privilege_url
+		from sys_user su 
+		join sys_user_role sur on su.id = sur.user_id
+		join sys_role sr on sur.role_id = sr.id
+		join sys_role_privilege srp on srp.role_id = sr.id
+		join sys_privilege sp on sp.id = srp.privilege_id
+	</select>
+	
+	
+	<resultMap type="SysUser" id="selectAllPrivilegeMap" extends="BaseMap">
+		<collection property="roles" columnPrefix="role_" resultMap="org.yd.maven_sample.dao.SysRoleMapper.privilegesByRoleMap"></collection>
+	</resultMap>
+	
+	<resultMap type="SysUser" id="sqlQueryAllPrivilegeMap" extends="BaseMap">
+		<collection property="roles" fetchType="lazy"  column="{id=role_id}" select="org.yd.maven_sample.dao.SysRoleMapper.selectRoleAsso"></collection>
+	</resultMap>
+	
+	<select id="selectForSqlQueryResult" resultMap="sqlQueryAllPrivilegeMap">
+		select * from sys_user su join sys_user_role sur on su.id = sur.user_id
+	</select>
+	
+</mapper>
